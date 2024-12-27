@@ -80,7 +80,7 @@ The service accepts `POST` requests with a JSON body. Each request requires the 
 
 2. Start the development server:
    ```bash
-   npx wrangler dev
+   npx wrangler dev --env=development
    ```
    This will run the Worker locally at `http://localhost:8787`.
 
@@ -104,7 +104,7 @@ The service accepts `POST` requests with a JSON body. Each request requires the 
 2. **Set Up Wrangler with Your Account**:
 	- Authenticate npx wrangler with your new Cloudflare account:
 	  ```bash
-	  wrangler login
+	  npx wrangler login
 	  ```
 
 3. **Configure KV Namespace**:
@@ -138,7 +138,7 @@ The service accepts `POST` requests with a JSON body. Each request requires the 
 
 2. Deploy the Worker:
    ```bash
-   wrangler deploy
+   npx wrangler deploy
    ```
 
 ---

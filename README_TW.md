@@ -75,12 +75,13 @@
 ### 開始本地開發
 1. 使用 Wrangler 驗證你的 Cloudflare 帳號：
    ```bash
-   wrangler login
+   npx wrangler login
    ```
 
 2. 啟動本地開發伺服器：
    ```bash
-   wrangler dev
+   npx wrangler dev --env=development
+
    ```
    此命令將在 `http://localhost:8787` 運行本地 Worker。
 
