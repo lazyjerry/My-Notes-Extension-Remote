@@ -18,38 +18,176 @@
 ### 支援的操作與請求方式
 此服務接受 `POST` 請求，並使用 JSON 格式的請求主體。每個請求都需要包含 `jerry-auth` 標頭以進行身份驗證。
 
-### 操作範例
-1. **讀取鍵值**
-   ```bash
-   curl -X POST "https://your-worker-url.workers.dev/" \
-   -H "Content-Type: application/json" \
-   -H "jerry-auth: your-auth-password" \
-   -d '{"action":"read", "key":"exampleKey"}'
-   ```
+---
 
-2. **新增或更新鍵值 (Put)**
-   ```bash
-   curl -X POST "https://your-worker-url.workers.dev/" \
-   -H "Content-Type: application/json" \
-   -H "jerry-auth: your-auth-password" \
-   -d '{"action":"put", "key":"exampleKey", "content":"exampleValue"}'
-   ```
+### 操作範例與 I/O 格式
 
-3. **刪除鍵值**
-   ```bash
-   curl -X POST "https://your-worker-url.workers.dev/" \
-   -H "Content-Type: application/json" \
-   -H "jerry-auth: your-auth-password" \
-   -d '{"action":"delete", "key":"exampleKey"}'
-   ```
+#### **1. 讀取鍵值**
 
-4. **列出鍵值**
-   ```bash
-   curl -X POST "https://your-worker-url.workers.dev/" \
-   -H "Content-Type: application/json" \
-   -H "jerry-auth: your-auth-password" \
-   -d '{"action":"list", "cursor":null, "limit":100}'
-   ```
+- **輸入格式：**
+  ```json
+  {
+    "action": "read",
+    "key": "exampleKey"
+  }
+  ```
+
+- **輸出格式：**
+	- 成功：
+	  ```json
+	  {
+		"status": 200,
+		"isSuccess": true,
+		"result": "value_of_exampleKey"
+	  }
+	  ```
+	- 失敗（鍵不存在）：
+	  ```json
+	  {
+		"status": 404,
+		"isSuccess": false,
+		"result": "Value not found"
+	  }
+	  ```
+
+- **示例呼叫：**
+  ```bash
+  curl -X POST "https://your-worker-url.workers.dev/" \
+  -H "Content-Type: application/json" \
+  -H "jerry-auth: your-auth-password" \
+  -d '{"action":"read", "key":"exampleKey"}'
+  ```
+
+---
+
+#### **2. 新增或更新鍵值 (Put)**
+
+- **輸入格式：**
+  ```json
+  {
+    "action": "put",
+    "key": "exampleKey",
+    "content": "exampleValue"
+  }
+  ```
+
+- **輸出格式：**
+	- 新增鍵值：
+	  ```json
+	  {
+		"status": 200,
+		"isSuccess": true,
+		"result": "create action completed"
+	  }
+	  ```
+	- 更新鍵值：
+	  ```json
+	  {
+		"status": 200,
+		"isSuccess": true,
+		"result": "update action completed"
+	  }
+	  ```
+	- 未更新（內容相同）：
+	  ```json
+	  {
+		"status": 200,
+		"isSuccess": false,
+		"result": "Content is identical to the existing value, no update performed"
+	  }
+	  ```
+
+- **示例呼叫：**
+  ```bash
+  curl -X POST "https://your-worker-url.workers.dev/" \
+  -H "Content-Type: application/json" \
+  -H "jerry-auth: your-auth-password" \
+  -d '{"action":"put", "key":"exampleKey", "content":"exampleValue"}'
+  ```
+
+---
+
+#### **3. 刪除鍵值**
+
+- **輸入格式：**
+  ```json
+  {
+    "action": "delete",
+    "key": "exampleKey"
+  }
+  ```
+
+- **輸出格式：**
+	- 成功刪除：
+	  ```json
+	  {
+		"status": 200,
+		"isSuccess": true,
+		"result": "Value deleted"
+	  }
+	  ```
+	- 失敗（鍵不存在）：
+	  ```json
+	  {
+		"status": 404,
+		"isSuccess": false,
+		"result": "Value not found"
+	  }
+	  ```
+
+- **示例呼叫：**
+  ```bash
+  curl -X POST "https://your-worker-url.workers.dev/" \
+  -H "Content-Type: application/json" \
+  -H "jerry-auth: your-auth-password" \
+  -d '{"action":"delete", "key":"exampleKey"}'
+  ```
+
+---
+
+#### **4. 列出鍵值**
+
+- **輸入格式：**
+  ```json
+  {
+    "action": "list",
+    "cursor": null,
+    "limit": 100,
+    "content": "searchString" // 可選
+  }
+  ```
+
+- **輸出格式：**
+	- 成功：
+	  ```json
+	  {
+		"status": 200,
+		"isSuccess": true,
+		"result": {
+		  "keys": ["key1", "key2", "key3"],
+		  "cursor": "next-cursor"
+		}
+	  }
+	  ```
+	- 最後一頁（無更多鍵）：
+	  ```json
+	  {
+		"status": 200,
+		"isSuccess": true,
+		"result": {
+		  "keys": ["key1", "key2", "key3"],
+		  "cursor": null
+		}
+	  }
+	  ```
+
+- **示例呼叫：**
+  ```bash
+  curl -X POST "https://your-worker-url.workers.dev/" \
+  -H "Content-Type: application/json" \
+  -H "jerry-auth: your-auth-password" \
+  -d '{"action":"list", "cursor":null, "limit":100, "content":"searchString"}'
+  ```
 
 ---
 
@@ -81,9 +219,7 @@
 2. 啟動本地開發伺服器：
    ```bash
    npx wrangler dev --env=development
-
    ```
-   此命令將在 `http://localhost:8787` 運行本地 Worker。
 
 3. 測試本地服務：
    ```bash
