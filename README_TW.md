@@ -104,7 +104,7 @@
 2. **使用 Wrangler 設定帳號**：
 	- 使用以下命令登入 Cloudflare 帳號：
 	  ```bash
-	  wrangler login
+	  npx wrangler login
 	  ```
 
 3. **設定 KV Namespace**：
@@ -117,12 +117,12 @@
 
 	- 如果需要創建新的 KV Namespace，執行以下命令：
 	  ```bash
-	  wrangler kv:namespace create "my_notes_extension"
+	  npx wrangler kv:namespace create "my_notes_extension"
 	  ```
 
 4. **部署 Worker**：
    ```bash
-   wrangler deploy
+   npx wrangler deploy
    ```
 
 ---
@@ -138,7 +138,7 @@
 
 2. 部署 Worker：
    ```bash
-   wrangler deploy
+   npx wrangler deploy
    ```
 
 ---
