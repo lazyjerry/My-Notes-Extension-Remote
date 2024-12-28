@@ -1,10 +1,15 @@
 export interface Env {
 	my_notes_extension: KVNamespace;
-	AUTH_PASSWORD: string; // 新增這個屬性來存放環境變數
+	AUTH_PASSWORD: string; // 環境變數中的密碼
 }
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		// 處理 OPTIONS 請求以支持 CORS 預檢
+		if (request.method === "OPTIONS") {
+			return handleOptionsRequest();
+		}
+
 		// 使用環境變數中的 AUTH_PASSWORD
 		const AUTH_PASSWORD = env.AUTH_PASSWORD;
 
@@ -31,6 +36,7 @@ export default {
 		}
 
 		try {
+			let response: Response;
 			switch (action) {
 				case "read": {
 					// Read 操作
@@ -41,10 +47,11 @@ export default {
 					if (value === null) {
 						return jsonResponse(404, false, "Value not found");
 					}
-					return jsonResponse(200, true, value);
+					response = jsonResponse(200, true, value);
+					break;
 				}
 				case "put": {
-					// Put 操作（整合 create 和 update）
+					// Put 操作
 					if (!key || !content) {
 						return jsonResponse(400, false, "Key and content are required for put action");
 					}
@@ -56,7 +63,8 @@ export default {
 
 					await env.my_notes_extension.put(key, content);
 					const resultMessage = existingValue === null ? "create action completed" : "update action completed";
-					return jsonResponse(200, true, resultMessage);
+					response = jsonResponse(200, true, resultMessage);
+					break;
 				}
 				case "delete": {
 					// Delete 操作
@@ -64,16 +72,17 @@ export default {
 						return jsonResponse(400, false, "Key is required for delete action");
 					}
 					await env.my_notes_extension.delete(key);
-					return jsonResponse(200, true, "Value deleted");
+					response = jsonResponse(200, true, "Value deleted");
+					break;
 				}
 				case "list": {
 					// List 操作
 					const options: KVNamespaceListOptions = {};
 					if (cursor) {
-						options.cursor = cursor; // 分頁用的游標
+						options.cursor = cursor;
 					}
 					if (limit) {
-						options.limit = limit; // 每頁限制返回數量
+						options.limit = limit;
 					}
 
 					const listResult = await env.my_notes_extension.list(options);
@@ -86,24 +95,47 @@ export default {
 						})
 						: listResult.keys;
 
-					// 返回鍵名及下一頁的游標
-					return jsonResponse(200, true, {
+					response = jsonResponse(200, true, {
 						keys: filteredKeys.map((keyObj) => keyObj.name),
 						cursor: listResult.list_complete ? null : listResult.cursor,
 					});
+					break;
 				}
 				default: {
-					// 如果執行到這裡，應該是程式錯誤
-					return jsonResponse(500, false, "Unhandled action");
+					response = jsonResponse(500, false, "Unhandled action");
+					break;
 				}
 			}
+
+			// 附加 CORS 標頭到回應
+			return appendCorsHeaders(response);
 		} catch (err) {
-			// 錯誤處理
 			console.error(`KV operation error: ${err}`);
-			return jsonResponse(500, false, "Internal Server Error");
+			return appendCorsHeaders(jsonResponse(500, false, "Internal Server Error"));
 		}
 	},
 } satisfies ExportedHandler<Env>;
+
+// 處理 OPTIONS 請求的函式
+function handleOptionsRequest(): Response {
+	return new Response(null, {
+		status: 204,
+		headers: {
+			"Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+			"Access-Control-Allow-Headers": "Content-Type, jerry-auth",
+		},
+	});
+}
+
+// 附加 CORS 標頭到回應的函式
+function appendCorsHeaders(response: Response): Response {
+	const newHeaders = new Headers(response.headers);
+	newHeaders.set("Access-Control-Allow-Origin", "*");
+	newHeaders.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+	newHeaders.set("Access-Control-Allow-Headers", "Content-Type, jerry-auth");
+	return new Response(response.body, { ...response, headers: newHeaders });
+}
 
 // 通用的 JSON 回應生成函式
 function jsonResponse(status: number, isSuccess: boolean, result: any): Response {

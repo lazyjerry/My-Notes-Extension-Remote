@@ -202,7 +202,7 @@
 2. 克隆本專案代碼：
    ```bash
    git clone https://github.com/your-repo/my-notes-extension.git
-   cd my-notes-extension
+   cd my-notes-extension-remote
    ```
 
 3. 安裝依賴：
